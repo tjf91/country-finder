@@ -6,6 +6,7 @@ interface PhoneNumberInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   phone_length: number;
+  phoneInputRef?: React.Ref<HTMLInputElement>;
 }
 
 const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
@@ -13,6 +14,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
   onChange,
   placeholder = "(000)-000-0000",
   phone_length,
+  phoneInputRef,
 }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value);
@@ -58,6 +60,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
       onChange={handleInputChange}
       placeholder={placeholder}
       className="mb-2"
+      ref={phoneInputRef}
     />
   );
 };

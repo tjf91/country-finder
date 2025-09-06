@@ -1,10 +1,10 @@
 const authAPI = import.meta.env.VITE_AUTH_API_KEY;
-
+const authURL = import.meta.env.VITE_AUTH_URL;
 export interface AuthResponse {
   access_token: string;
 }
 export async function getAuthToken(): Promise<AuthResponse> {
-  const apiUrl = `${import.meta.env.VITE_AUTH_URL}/access_token`;
+  const apiUrl = `${authURL}/access_token`;
   const headers = {
     "Content-Type": "application/json",
     "Api-Key": authAPI,
