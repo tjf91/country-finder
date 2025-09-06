@@ -3,7 +3,6 @@ import * as SelectPrimitive from "@radix-ui/react-select";
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import FlagIcon from "./flagIcon";
 
 function Select({
   ...props
@@ -20,7 +19,11 @@ function SelectGroup({
 function SelectValue({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Value>) {
-  return <SelectPrimitive.Value data-slot="select-value" {...props} />;
+  return (
+    <>
+      <SelectPrimitive.Value data-slot="select-value" {...props} />
+    </>
+  );
 }
 
 function SelectTrigger({

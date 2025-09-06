@@ -1,4 +1,4 @@
-import { getAuthToken, type AuthResponse } from "@/services/auth";
+import { type AuthResponse } from "@/services/auth";
 import React, { createContext, useMemo, useState } from "react";
 
 export type AuthContextValue = {

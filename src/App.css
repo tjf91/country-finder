@@ -157,3 +157,17 @@
     @apply bg-background text-foreground;
   }
 }
+.politespace-proxy.active.notempty input {
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.politespace-proxy.active.notempty input[type="number"] {
+  -moz-appearance: textfield;
+}
+.politespace-proxy.active.notempty
+  input[type="number"]::-webkit-inner-spin-button,
+.politespace-proxy.active.notempty
+  input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
