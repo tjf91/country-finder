@@ -21,15 +21,12 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
   };
   function formatPhoneNumber(raw: string, lastGroupLen: number): string {
     const digits = raw.replace(/\D/g, "");
-    console.log("digits", digits);
     const len = digits.length;
-
     if (len === 0) return "";
     let result = "";
     if (len <= 3) {
       return `(${digits}`;
     }
-
     const first = digits.slice(0, 3);
     result = `(${first})`;
     if (len <= 6) {

@@ -1,4 +1,4 @@
-import { type AuthResponse } from "@/services/auth";
+import { getAuthToken, type AuthResponse } from "@/services/auth";
 import React, { createContext, useMemo, useState } from "react";
 
 export type AuthContextValue = {
@@ -20,7 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated: !!token,
       login: async () => {
         // const t = await getAuthToken();
-        const t = { access_token: "test" } as unknown as AuthResponse; // Mock token for testing
+        const t = await getAuthToken();
         setToken(t.access_token);
       },
     }),

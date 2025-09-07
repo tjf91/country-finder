@@ -3,17 +3,18 @@ import "./App.css";
 import {
   Select,
   SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "./hooks/useAuth";
-import { useEffect, useRef, useState, type JSX } from "react";
+import { useEffect, useMemo, useRef, useState, type JSX } from "react";
 import FlagIcon from "@/components/ui/flagIcon";
 import mockCountries from "@/data/mockCountriesApi.json";
 import PhoneNumberInput from "@/components/ui/numberFormat";
+import DropDownOptions from "./components/ui/dropDownOptions";
+import { fetchCountries } from "./services/countries";
 
 export type Country = {
   id: string;
@@ -33,53 +34,58 @@ function App() {
   const [phoneInput, setPhoneInput] = useState<string>("");
   const [isValid, setIsValid] = useState<boolean>(false);
   const [error, setError] = useState<string | null>("");
-
-  console.log("selectedCountry", selectedCountry);
+  const [dropDownOpen, setDropDownOpen] = useState<boolean>(false);
   const phoneInputRef = useRef<HTMLInputElement | null>(null);
   const filterRef = useRef<HTMLInputElement | null>(null);
   function filterCountries(searchTerm: string) {
-    const filtered = Object.fromEntries(
-      Object.entries(originalCountries).filter(([code, country]) =>
-        country.name.toLowerCase().includes(searchTerm.toLowerCase()),
-      ),
-    );
+    const filtered: Record<string, Country> = {};
+    for (const code in originalCountries) {
+      if (
+        originalCountries.hasOwnProperty(code) &&
+        originalCountries[code].name
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      ) {
+        filtered[code] = originalCountries[code];
+      }
+    }
     return filtered;
   }
   useEffect(() => {
-    setOriginalCountries(mockCountries);
-    setCountries(mockCountries);
-  }, []);
-  //****************************** */
-  //TODO move to different file maybe
-  let countryOptions: JSX.Element | JSX.Element[];
-  if (Object.keys(countries).length !== 0) {
-    countryOptions = (
-      <>
-        {Object.entries(countries).map(([countryCode, country]) => {
-          // const { calling_code, phone_length, name } = country;
+    async function run() {
+      try {
+        // setLoading(true);
+        setError(null);
+        if (!token) {
+          await login();
+        }
 
-          return (
-            <div className="flex flex-row mb-1.5" key={countryCode}>
-              <FlagIcon src={String(countryCode).toLowerCase()} />
-              <SelectItem
-                key={countryCode}
-                value={countryCode}
-                onClick={() => {
-                  setSelectedCountry({ [countryCode]: country });
-                }}
-              >
-                {country.name}
-              </SelectItem>
-              <p>{country.calling_code}</p>
-            </div>
-          );
-        })}
-      </>
-    );
-  } else {
-    countryOptions = <div>Loading...</div>;
-  }
-  //****************************** */
+        if (token && !Object.keys(originalCountries).length) {
+          const data = await fetchCountries(token);
+          setOriginalCountries(data);
+          setCountries(data);
+        }
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          setError(err.message ?? "Something went wrong");
+        }
+      } finally {
+        // setLoading(false);
+      }
+    }
+
+    run();
+  }, [token]);
+
+  //Need this to focus the search input when dropdown remounts
+  useEffect(() => {
+    if (dropDownOpen) {
+      setTimeout(() => {
+        filterRef.current?.focus();
+      }, 10);
+    }
+  }, [countries, dropDownOpen]);
+
   return (
     <>
       <div className="mb-4 flex flex-row gap-x-2">
@@ -90,13 +96,28 @@ function App() {
                 ? Object.keys(selectedCountry)[0]
                 : undefined
             }
+            onOpenChange={(e) => {
+              if (!e) {
+                setCountries(originalCountries);
+                setDropDownOpen(false);
+              }
+            }}
+            onValueChange={(value) => {
+              setSelectedCountry({ [value]: countries[value] });
+              setDropDownOpen(false);
+              setTimeout(() => {
+                phoneInputRef.current?.focus();
+              }, 100);
+            }}
           >
             <SelectTrigger
               className="w-[120px] text-grey"
               onClick={() => {
+                setDropDownOpen(true);
+
                 setTimeout(() => {
                   filterRef.current?.focus();
-                }, 100);
+                }, 200);
               }}
             >
               <SelectValue placeholder="Select country" />
@@ -114,22 +135,27 @@ function App() {
                   : "+1"}
               </p>
             </SelectTrigger>
-            <SelectContent>
-              <div onKeyDown={(e) => e.stopPropagation()}>
+            <SelectContent
+              onCloseAutoFocus={(e) => {
+                e.preventDefault();
+                setDropDownOpen(false);
+                setCountries(originalCountries);
+              }}
+            >
+              <div
+                className="sticky top-0 bg-white z-10 pb-2"
+                onKeyDown={(e) => e.stopPropagation()}
+              >
                 <Input
                   placeholder="Search country..."
                   className="mb-2"
                   ref={filterRef}
                   onChange={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
                     setCountries(filterCountries(e.target.value));
-
-                    // if(e.target.value.length<)
                   }}
                 />
               </div>
-              {countryOptions}
+              <DropDownOptions countries={countries} />
             </SelectContent>
           </Select>
         </div>
@@ -152,6 +178,12 @@ function App() {
             onChange={(value: string) => {
               setPhoneInput(value);
               setError("");
+              if (
+                value.length ===
+                Number(Object.values(selectedCountry)[0].phone_length)
+              ) {
+                setIsValid(true);
+              }
             }}
           />
         </div>
@@ -167,17 +199,15 @@ function App() {
       <div>
         <div className="flex flex-wrap">
           <Button
-            onClick={() => {
-              console.log("Clicked");
+            onClick={async () => {
               if (!isValid) {
-                console.log("Invalid input");
                 setError("Invalid phone number");
                 phoneInputRef.current?.focus();
                 return;
               }
-              console.log("token", token);
-
-              // get countries here
+              if (!isAuthenticated) {
+                login();
+              }
             }}
           >
             Submit
